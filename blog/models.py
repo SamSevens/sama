@@ -3,27 +3,36 @@ from django.conf import settings
 from django.db import models
 
 
+class Topic(models.Model):
+    """Adds Topics to help users to seperate """
+    name = models.CharField(
+        max_length=50,
+        unique=True  # No duplicates!
+    )
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+
+
 class Post(models.Model):
     """
     Represents a blog post
     """
     DRAFT = 'draft'
     PUBLISHED = 'published'
-    BIRDS = 'birds'
-    GAMES = 'games'
-    RAP_MUSIC = 'rap music'
-    NONSENSE = 'nonsense'
     STATUS_CHOICES = [
         (DRAFT, 'Draft'),
         (PUBLISHED, 'Published')
     ]
-    TOPIC_CHOICES = [
-        (BIRDS, 'Birds'),
-        (RAP_MUSIC, 'Rap Music'),
-        (GAMES, "Games"),
-        (NONSENSE, 'Nonsense')
-    ]
-    title = models.CharField(max_length=255)
+
+    title = models.CharField(
+        max_length=255,
+        unique=True,
+    )
     slug = models.SlugField(
         null=True,
         unique_for_date='published',
@@ -54,6 +63,7 @@ class Post(models.Model):
     slug = models.SlugField(
         null=False,
         unique_for_date='published',
+        max_length=255
     )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -61,11 +71,9 @@ class Post(models.Model):
         related_name='blog_posts',
         null=False,
     )
-    topic = models.CharField(
-        max_length=10,
-        choices=TOPIC_CHOICES,
-        default=title,
-        help_text='The topics that are discussed in the post',
+    topics = models.ManyToManyField(
+        Topic,
+        related_name='blog_posts'
     )
 
     class Meta:
@@ -73,3 +81,21 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Comment(models.Model):
+    """Lets the users make comments"""
+    name = models.CharField(
+        max_length=25,
+        null=False,
+    )
+
+    email = models.CharField(
+        max_length=100,
+        null=False,
+    )
+    text = models.TextField(null=False)
+
+    approved = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
